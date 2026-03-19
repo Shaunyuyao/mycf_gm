@@ -32,6 +32,10 @@ class AccessDeniedError(RuntimeError):
     pass
 
 
+class RateLimitedError(RuntimeError):
+    pass
+
+
 def save_cookies(cookie_file: Path, cookies: list[dict[str, Any]]) -> None:
     cookie_file.parent.mkdir(parents=True, exist_ok=True)
     with cookie_file.open("w", encoding="utf-8") as f:
@@ -375,6 +379,19 @@ def create_session(cookie_file: Path = DEFAULT_COOKIE_FILE) -> requests.Session:
 
 
 def classify_html_state(text: str) -> str:
+    lower = text.lower()
+    if any(
+        s in lower
+        for s in [
+            "too many requests",
+            "rate limit exceeded",
+            "http error 429",
+            "error 429",
+            "status code 429",
+            "cf-error-code",
+        ]
+    ):
+        return "RATE_LIMITED"
     if "GSMArena Turnstile check" in text or "cf-turnstile" in text:
         return "TURNSTILE"
     if any(
@@ -411,6 +428,19 @@ def verify_session_with_cookies(cookie_file: Path = DEFAULT_COOKIE_FILE) -> dict
 
 
 def parse_device_page(html: str, url: str) -> dict[str, Any]:
+    lower = html.lower()
+    if any(
+        s in lower
+        for s in [
+            "too many requests",
+            "rate limit exceeded",
+            "http error 429",
+            "error 429",
+            "status code 429",
+            "cf-error-code",
+        ]
+    ):
+        raise RateLimitedError("429 Too Many Requests page returned")
     if "GSMArena Turnstile check" in html or "cf-turnstile" in html:
         raise CloudflareBlockedError("Turnstile challenge page returned")
     deny_signals = [
@@ -452,10 +482,30 @@ def parse_device_page(html: str, url: str) -> dict[str, Any]:
     return specs
 
 
+def compute_retry_wait_seconds(
+    retry_after_header: str | None,
+    attempt: int,
+    retry_wait_seconds: float,
+    max_retry_wait_seconds: float,
+) -> float:
+    if retry_after_header:
+        try:
+            retry_after = float(retry_after_header)
+            if retry_after > 0:
+                return min(retry_after, max_retry_wait_seconds)
+        except (TypeError, ValueError):
+            pass
+    backoff = retry_wait_seconds * (2**attempt)
+    return min(backoff, max_retry_wait_seconds)
+
+
 def scrape_devices(
     limit: int = 5,
     start: int = 0,
     interval_seconds: float = 1.5,
+    max_retries: int = 3,
+    retry_wait_seconds: float = 4.0,
+    max_retry_wait_seconds: float = 90.0,
     cookie_file: Path = DEFAULT_COOKIE_FILE,
     output_file: Path = DEFAULT_OUTPUT_FILE,
     provider: str = "direct",
@@ -471,42 +521,75 @@ def scrape_devices(
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     for index, url in enumerate(target_urls, start=1):
-        try:
-            if provider == "direct":
-                response = session.get(url, timeout=30)
-            elif provider == "zenrows":
-                api_key = zenrows_api_key or os.getenv("ZENROWS_API_KEY")
-                if not api_key:
-                    raise RuntimeError("ZENROWS_API_KEY is required when provider=zenrows")
-                response = requests.get(
-                    "https://api.zenrows.com/v1/",
-                    params={
-                        "apikey": api_key,
-                        "url": url,
-                        "js_render": "true",
-                        "premium_proxy": "true",
-                    },
-                    timeout=60,
-                    impersonate="chrome124",
-                )
-            else:
-                raise RuntimeError(f"Unknown provider: {provider}")
-            response.raise_for_status()
-            record = parse_device_page(response.text, url)
-            output.append(record)
-            print(f"[{index}/{len(target_urls)}] OK: {record['model']}")
-        except CloudflareBlockedError:
-            raise RuntimeError(
-                f"Blocked by Cloudflare at {url}. "
-                f"Run bootstrap first: python scraper.py bootstrap-cookies --cookie-file {cookie_file}"
-            ) from None
-        except AccessDeniedError:
-            raise RuntimeError(
-                f"Access denied at {url}. This is usually IP/network reputation blocking. "
-                "Try another clean network/IP, disable VPN/proxy, then re-run bootstrap-cookies."
-            ) from None
-        except Exception as exc:
-            print(f"[{index}/{len(target_urls)}] FAIL: {url} ({exc})")
+        success = False
+        for attempt in range(max_retries + 1):
+            response = None
+            try:
+                if provider == "direct":
+                    response = session.get(url, timeout=30)
+                elif provider == "zenrows":
+                    api_key = zenrows_api_key or os.getenv("ZENROWS_API_KEY")
+                    if not api_key:
+                        raise RuntimeError("ZENROWS_API_KEY is required when provider=zenrows")
+                    response = requests.get(
+                        "https://api.zenrows.com/v1/",
+                        params={
+                            "apikey": api_key,
+                            "url": url,
+                            "js_render": "true",
+                            "premium_proxy": "true",
+                        },
+                        timeout=60,
+                        impersonate="chrome124",
+                    )
+                else:
+                    raise RuntimeError(f"Unknown provider: {provider}")
+
+                if response.status_code == 429:
+                    wait_s = compute_retry_wait_seconds(
+                        response.headers.get("Retry-After"),
+                        attempt,
+                        retry_wait_seconds,
+                        max_retry_wait_seconds,
+                    )
+                    raise RateLimitedError(f"HTTP 429 Too Many Requests (suggested wait {wait_s:.1f}s)")
+
+                response.raise_for_status()
+                record = parse_device_page(response.text, url)
+                output.append(record)
+                print(f"[{index}/{len(target_urls)}] OK: {record['model']}")
+                success = True
+                break
+            except RateLimitedError as exc:
+                if attempt < max_retries:
+                    retry_after = response.headers.get("Retry-After") if response is not None else None
+                    wait_s = compute_retry_wait_seconds(
+                        retry_after,
+                        attempt,
+                        retry_wait_seconds,
+                        max_retry_wait_seconds,
+                    )
+                    print(
+                        f"[{index}/{len(target_urls)}] RETRY {attempt + 1}/{max_retries}: "
+                        f"{url} ({exc}); sleeping {wait_s:.1f}s"
+                    )
+                    time.sleep(wait_s)
+                    continue
+                print(f"[{index}/{len(target_urls)}] FAIL: {url} ({exc})")
+                break
+            except CloudflareBlockedError:
+                raise RuntimeError(
+                    f"Blocked by Cloudflare at {url}. "
+                    f"Run bootstrap first: python scraper.py bootstrap-cookies --cookie-file {cookie_file}"
+                ) from None
+            except AccessDeniedError:
+                raise RuntimeError(
+                    f"Access denied at {url}. This is usually IP/network reputation blocking. "
+                    "Try another clean network/IP, disable VPN/proxy, then re-run bootstrap-cookies."
+                ) from None
+            except Exception as exc:
+                print(f"[{index}/{len(target_urls)}] FAIL: {url} ({exc})")
+                break
         time.sleep(interval_seconds)
 
     output_file.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -561,6 +644,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_scrape.add_argument("--limit", type=int, default=5)
     p_scrape.add_argument("--start", type=int, default=0)
     p_scrape.add_argument("--interval-seconds", type=float, default=1.5)
+    p_scrape.add_argument("--max-retries", type=int, default=3)
+    p_scrape.add_argument("--retry-wait-seconds", type=float, default=4.0)
+    p_scrape.add_argument("--max-retry-wait-seconds", type=float, default=90.0)
     p_scrape.add_argument("--cookie-file", type=Path, default=DEFAULT_COOKIE_FILE)
     p_scrape.add_argument("--output-file", type=Path, default=DEFAULT_OUTPUT_FILE)
     p_scrape.add_argument("--provider", choices=["direct", "zenrows"], default="direct")
@@ -606,6 +692,9 @@ def main() -> None:
             limit=args.limit,
             start=args.start,
             interval_seconds=args.interval_seconds,
+            max_retries=args.max_retries,
+            retry_wait_seconds=args.retry_wait_seconds,
+            max_retry_wait_seconds=args.max_retry_wait_seconds,
             cookie_file=args.cookie_file,
             output_file=args.output_file,
             provider=args.provider,

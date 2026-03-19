@@ -59,6 +59,19 @@ def is_access_denied_html(html: str) -> bool:
     return any(s.lower() in lower for s in deny_signals)
 
 
+def is_rate_limited_html(html: str) -> bool:
+    lower = html.lower()
+    rate_limit_signals = [
+        "too many requests",
+        "rate limit exceeded",
+        "http error 429",
+        "error 429",
+        "status code 429",
+        "cf-error-code",
+    ]
+    return any(token in lower for token in rate_limit_signals)
+
+
 def ensure_access(page, url: str, timeout_seconds: int) -> str:
     page.goto(url, wait_until="domcontentloaded", timeout=45_000)
     deadline = time.time() + timeout_seconds
@@ -66,6 +79,8 @@ def ensure_access(page, url: str, timeout_seconds: int) -> str:
         html = page.content()
         if is_access_denied_html(html):
             raise RuntimeError(f"Access denied at {url}. Try another network/IP.")
+        if is_rate_limited_html(html):
+            raise RuntimeError(f"Rate limited (429) at {url}.")
         if not is_turnstile_html(html):
             return html
         try:
@@ -122,13 +137,17 @@ def scrape_browser_only(
     timeout_seconds: int,
     max_retries: int,
     retry_wait_seconds: float,
+    max_retry_wait_seconds: float,
     user_data_dir: Path,
     output_file: Path,
     browser_channel: str,
     cdp_url: str | None,
 ) -> None:
     urls = discover_device_urls()
-    target_urls = urls[start : start + limit]
+    if limit == 0:
+        target_urls = urls[start:]
+    else:
+        target_urls = urls[start : start + limit]
     if not target_urls:
         raise RuntimeError(f"No URLs found for start={start}, limit={limit}")
 
@@ -181,11 +200,15 @@ def scrape_browser_only(
                                 "Target page, context or browser has been closed",
                             ]
                         )
-                        if transient and attempt < max_retries:
-                            wait_s = retry_wait_seconds * (attempt + 1)
+                        rate_limited = "Rate limited (429)" in message
+                        if (transient or rate_limited) and attempt < max_retries:
+                            if rate_limited:
+                                wait_s = min(retry_wait_seconds * (2**attempt), max_retry_wait_seconds)
+                            else:
+                                wait_s = min(retry_wait_seconds * (attempt + 1), max_retry_wait_seconds)
                             print(
                                 f"[{index}/{len(target_urls)}] RETRY {attempt + 1}/{max_retries}: {url} "
-                                f"(transient error: {exc})"
+                                f"(error: {exc}); sleeping {wait_s:.1f}s"
                             )
                             time.sleep(wait_s)
                             try:
@@ -211,12 +234,13 @@ def scrape_browser_only(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="GSMArena browser-only scraper (single browser context).")
-    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--interval-seconds", type=float, default=1.5)
     parser.add_argument("--timeout-seconds", type=int, default=600)
     parser.add_argument("--max-retries", type=int, default=2)
     parser.add_argument("--retry-wait-seconds", type=float, default=2.0)
+    parser.add_argument("--max-retry-wait-seconds", type=float, default=90.0)
     parser.add_argument("--user-data-dir", type=Path, default=Path("browser_profile_browser_only"))
     parser.add_argument("--output-file", type=Path, default=DEFAULT_OUTPUT_FILE)
     parser.add_argument("--browser-channel", choices=["chrome", "chromium"], default="chrome")
@@ -233,6 +257,7 @@ def main() -> None:
         timeout_seconds=args.timeout_seconds,
         max_retries=args.max_retries,
         retry_wait_seconds=args.retry_wait_seconds,
+        max_retry_wait_seconds=args.max_retry_wait_seconds,
         user_data_dir=args.user_data_dir,
         output_file=args.output_file,
         browser_channel=args.browser_channel,

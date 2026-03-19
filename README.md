@@ -34,22 +34,20 @@ curl http://127.0.0.1:9222/json/version
 ### 3) 运行 browser-only 抓取
 小批量验证：
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 3 --timeout-seconds 600
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 3 --timeout-seconds 600 
 ```
 
 推荐批量参数（带重试）：
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 20 --max-retries 3 --retry-wait-seconds 2 --timeout-seconds 600
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 20 --max-retries 3 --retry-wait-seconds 2 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120
 ```
 
 输出文件：
 - `data/gsmarena_specs_browser_only.json`
 
-### 4) 全量抓取建议（分段）
+### 4) 全量抓取建议
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --start 0 --limit 1000 --max-retries 3
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --start 1000 --limit 1000 --max-retries 3
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --start 2000 --limit 1000 --max-retries 3
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --start 0 --max-retries 3 --retry-wait-seconds 2 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --interval-seconds 3
 ```
 
 ### 常见问题与处理
