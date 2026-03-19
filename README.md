@@ -39,15 +39,23 @@ uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 3 
 
 推荐批量参数（带重试）：
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 20 --max-retries 3 --retry-wait-seconds 2 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 20 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --interval-seconds 5 --jitter-ratio 0.3
+```
+
+长跑稳定参数（断点续跑 + 失败队列补抓）：
+```bash
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --interval-seconds 5 --jitter-ratio 0.3 --resume --failed-retry-rounds 2
 ```
 
 输出文件：
 - `data/gsmarena_specs_browser_only.json`
+- `data/gsmarena_browser_only_checkpoint.json`
+- `data/gsmarena_failed_urls.txt`
 
 ### 4) 全量抓取建议
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --start 0 --max-retries 3 --retry-wait-seconds 2 --timeout-seconds 600 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --interval-seconds 3
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 --timeout-seconds 600 --interval-seconds 5 --jitter-ratio 0.3 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --resume --failed-retry-rounds 2
+
 ```
 
 ### 常见问题与处理

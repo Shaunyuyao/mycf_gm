@@ -581,5 +581,126 @@
     "Misc": {
       "Colors": "Black"
     }
+  },
+  {
+    "model": "Nokia 9110i Communicator",
+    "brand": "Unknown",
+    "url": "https://www.gsmarena.com/nokia_9110i_communicator-18.php",
+    "Network": {
+      "Technology": "GSM",
+      "2G bands": "GSM 900",
+      "GPRS": "No",
+      "EDGE": "No"
+    },
+    "Launch": {
+      "Announced": "1999",
+      "Status": "Discontinued"
+    },
+    "Body": {
+      "Dimensions": "158 x 56 x 27 mm, 218 cc (6.22 x 2.20 x 1.06 in)",
+      "Weight": "253 g (8.92 oz)",
+      "SIM": "Mini-SIM"
+    },
+    "Display": {
+      "Type": "Grayscale LCD",
+      "Size": "4.5 inches, 110 x 35 mm, 37.2 cm2 (~42.0% screen-to-body ratio)",
+      "Resolution": "640 x 200 pixels (~149 ppi density) | Second display"
+    },
+    "Platform": {
+      "CPU": "AMD 486"
+    },
+    "Memory": {
+      "Card slot": "MMC",
+      "Phonebook": "Many",
+      "Call records": "Yes",
+      "Internal": "8MB | 4 MB Operating System and applications 2 MB program execution 2 MB user data storage Operating System: GEOSE-mail protocols: SMTP, IMAP4, POP3 and MIME1"
+    },
+    "Camera": {},
+    "Sound": {
+      "Loudspeaker": "No",
+      "Alert types": "Downloadable monophonic ringtones, composer",
+      "3.5mm jack": "No"
+    },
+    "Comms": {
+      "WLAN": "No",
+      "Bluetooth": "No",
+      "Positioning": "No",
+      "Infrared port": "Yes",
+      "Radio": "No"
+    },
+    "Features": {
+      "Messaging": "SMS, Email, Fax",
+      "Browser": "WAP, HTML",
+      "Clock": "Yes",
+      "Alarm": "Yes",
+      "Games": "Available separately",
+      "Java": "No | Telnet Terminal Organizer Help System & security"
+    },
+    "Battery": {
+      "Type": "Removable Li-Ion 1100 mAh battery (BLN-3)",
+      "Stand-by": "60 - 170 h",
+      "Talk time": "3 - 6 h"
+    },
+    "Misc": {
+      "Colors": "Black"
+    }
+  },
+  {
+    "model": "Nokia 8210",
+    "brand": "Unknown",
+    "url": "https://www.gsmarena.com/nokia_8210-19.php",
+    "Network": {
+      "Technology": "GSM",
+      "2G bands": "GSM 900 / 1800",
+      "GPRS": "No",
+      "EDGE": "No"
+    },
+    "Launch": {
+      "Announced": "1999",
+      "Status": "Discontinued"
+    },
+    "Body": {
+      "Dimensions": "101.5 x 44.5 x 17.4 mm, 66 cc (4.00 x 1.75 x 0.69 in)",
+      "Weight": "79 g (2.79 oz)",
+      "SIM": "Mini-SIM"
+    },
+    "Display": {
+      "Type": "Monochrome graphic",
+      "Resolution": "5 lines | Dynamic font size Softkey"
+    },
+    "Memory": {
+      "Card slot": "No",
+      "Phonebook": "250",
+      "Call records": "10 dialed, 10 received, 10 missed calls | Memory for 8 voice dial numbers 50 calendar notes"
+    },
+    "Camera": {},
+    "Sound": {
+      "Loudspeaker": "No",
+      "Alert types": "Vibration; Downloadable monophonic ringtones",
+      "3.5mm jack": "No"
+    },
+    "Comms": {
+      "WLAN": "No",
+      "Bluetooth": "No",
+      "Positioning": "No",
+      "Infrared port": "Yes",
+      "Radio": "No"
+    },
+    "Features": {
+      "Messaging": "SMS",
+      "Clock": "Yes",
+      "Alarm": "Yes",
+      "Games": "4",
+      "Languages": "32 total",
+      "Java": "No | Picture messaging Predictive text input Over-the-air activation for sending/receiving phone numbers Business card sending/receiving Organizer"
+    },
+    "Battery": {
+      "Type": "Removable Li-Ion 650 mAh battery (BLB-2)",
+      "Stand-by": "50 - 150 h",
+      "Talk time": "2 h - 3 h 20 min"
+    },
+    "Misc": {
+      "Colors": "6 Xpress-on covers"
+    }
   }
 ]

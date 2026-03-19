@@ -1,5 +1,6 @@
 import argparse
 import json
+import random
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -13,6 +14,88 @@ from playwright.sync_api import sync_playwright
 SITEMAP_URL = "https://www.gsmarena.com/sitemaps/phones.xml"
 BOOTSTRAP_URL = "https://www.gsmarena.com/makers.php3"
 DEFAULT_OUTPUT_FILE = Path("data") / "gsmarena_specs_browser_only.json"
+DEFAULT_CHECKPOINT_FILE = Path("data") / "gsmarena_browser_only_checkpoint.json"
+DEFAULT_FAILED_URLS_FILE = Path("data") / "gsmarena_failed_urls.txt"
+
+
+def sleep_with_jitter(base_seconds: float, jitter_ratio: float) -> float:
+    if base_seconds <= 0:
+        return 0.0
+    ratio = max(0.0, jitter_ratio)
+    if ratio == 0:
+        time.sleep(base_seconds)
+        return base_seconds
+    low = max(0.0, base_seconds * (1.0 - ratio))
+    high = max(low, base_seconds * (1.0 + ratio))
+    actual = random.uniform(low, high)
+    time.sleep(actual)
+    return actual
+
+
+def write_results(output_file: Path, records_by_url: dict[str, dict[str, Any]]) -> None:
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(
+        json.dumps(list(records_by_url.values()), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def write_failed_urls(failed_urls_file: Path, failed_urls: list[str]) -> None:
+    failed_urls_file.parent.mkdir(parents=True, exist_ok=True)
+    failed_urls_file.write_text("\n".join(failed_urls), encoding="utf-8")
+
+
+def save_checkpoint(
+    checkpoint_file: Path,
+    *,
+    start: int,
+    limit: int,
+    total_targets: int,
+    next_pos: int,
+    failed_urls: list[str],
+) -> None:
+    checkpoint_file.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "start": start,
+        "limit": limit,
+        "total_targets": total_targets,
+        "next_pos": next_pos,
+        "failed_urls": failed_urls,
+        "updated_at_epoch": int(time.time()),
+    }
+    checkpoint_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def load_checkpoint(
+    checkpoint_file: Path, *, start: int, limit: int, total_targets: int
+) -> tuple[int, list[str]]:
+    if not checkpoint_file.exists():
+        return 0, []
+    try:
+        payload = json.loads(checkpoint_file.read_text(encoding="utf-8"))
+    except Exception:
+        print(f"Checkpoint unreadable, restarting from beginning: {checkpoint_file}")
+        return 0, []
+
+    cp_start = int(payload.get("start", 0))
+    cp_limit = int(payload.get("limit", 0))
+    cp_total = int(payload.get("total_targets", 0))
+    if cp_start != start or cp_limit != limit or cp_total != total_targets:
+        print(
+            "Checkpoint does not match current start/limit/total, ignoring it. "
+            f"(checkpoint start={cp_start}, limit={cp_limit}, total={cp_total})"
+        )
+        return 0, []
+
+    next_pos = int(payload.get("next_pos", 0))
+    if next_pos < 0:
+        next_pos = 0
+    if next_pos > total_targets:
+        next_pos = total_targets
+
+    raw_failed = payload.get("failed_urls") or []
+    failed_urls = [u for u in raw_failed if isinstance(u, str)]
+    return next_pos, failed_urls
 
 
 def normalize_text(value: str | None) -> str:
@@ -134,10 +217,16 @@ def scrape_browser_only(
     limit: int,
     start: int,
     interval_seconds: float,
+    jitter_ratio: float,
     timeout_seconds: int,
     max_retries: int,
     retry_wait_seconds: float,
     max_retry_wait_seconds: float,
+    checkpoint_file: Path,
+    resume: bool,
+    failed_urls_file: Path,
+    retry_failed_at_end: bool,
+    failed_retry_rounds: int,
     user_data_dir: Path,
     output_file: Path,
     browser_channel: str,
@@ -152,6 +241,31 @@ def scrape_browser_only(
         raise RuntimeError(f"No URLs found for start={start}, limit={limit}")
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
+    records_by_url: dict[str, dict[str, Any]] = {}
+    if resume and output_file.exists():
+        try:
+            existing = json.loads(output_file.read_text(encoding="utf-8"))
+            if isinstance(existing, list):
+                for row in existing:
+                    if isinstance(row, dict) and isinstance(row.get("url"), str):
+                        records_by_url[row["url"]] = row
+                print(f"Resume: loaded {len(records_by_url)} existing records from {output_file}")
+        except Exception:
+            print(f"Resume: failed to parse existing output file, continuing fresh: {output_file}")
+
+    next_pos = 0
+    failed_urls: list[str] = []
+    failed_set: set[str] = set()
+    if resume:
+        next_pos, failed_urls = load_checkpoint(
+            checkpoint_file,
+            start=start,
+            limit=limit,
+            total_targets=len(target_urls),
+        )
+        failed_set = set(failed_urls)
+        print(f"Resume enabled: next_pos={next_pos}, pending_failed={len(failed_urls)}")
+
     with sync_playwright() as p:
         browser = None
         context = None
@@ -177,17 +291,14 @@ def scrape_browser_only(
                 print("Browser-only mode started. If Turnstile appears, solve it in this same browser window.")
             ensure_access(page, BOOTSTRAP_URL, timeout_seconds)
 
-            results: list[dict[str, Any]] = []
-            for index, url in enumerate(target_urls, start=1):
-                ok = False
+            def fetch_record(url: str, progress_label: str) -> dict[str, Any] | None:
+                nonlocal page
                 for attempt in range(max_retries + 1):
                     try:
                         html = ensure_access(page, url, timeout_seconds)
                         record = parse_device_page(html, url)
-                        results.append(record)
-                        print(f"[{index}/{len(target_urls)}] OK: {record['model']}")
-                        ok = True
-                        break
+                        print(f"{progress_label} OK: {record['model']}")
+                        return record
                     except Exception as exc:
                         message = str(exc)
                         transient = any(
@@ -206,25 +317,88 @@ def scrape_browser_only(
                                 wait_s = min(retry_wait_seconds * (2**attempt), max_retry_wait_seconds)
                             else:
                                 wait_s = min(retry_wait_seconds * (attempt + 1), max_retry_wait_seconds)
+                            actual_wait = sleep_with_jitter(wait_s, jitter_ratio / 2)
                             print(
-                                f"[{index}/{len(target_urls)}] RETRY {attempt + 1}/{max_retries}: {url} "
-                                f"(error: {exc}); sleeping {wait_s:.1f}s"
+                                f"{progress_label} RETRY {attempt + 1}/{max_retries}: {url} "
+                                f"(error: {exc}); sleeping {actual_wait:.1f}s"
                             )
-                            time.sleep(wait_s)
                             try:
                                 page.close()
                             except Exception:
                                 pass
                             page = context.new_page()
                             continue
-                        print(f"[{index}/{len(target_urls)}] FAIL: {url} ({exc})")
-                        break
-                if not ok:
-                    pass
-                time.sleep(interval_seconds)
+                        print(f"{progress_label} FAIL: {url} ({exc})")
+                        return None
+                return None
 
-            output_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-            print(f"Saved {len(results)} records to: {output_file}")
+            for pos in range(next_pos, len(target_urls)):
+                index = pos + 1
+                url = target_urls[pos]
+                label = f"[{index}/{len(target_urls)}]"
+                record = fetch_record(url, label)
+                if record is not None:
+                    records_by_url[url] = record
+                    if url in failed_set:
+                        failed_set.remove(url)
+                else:
+                    if url not in failed_set:
+                        failed_urls.append(url)
+                        failed_set.add(url)
+
+                next_pos = pos + 1
+                current_failed = [u for u in failed_urls if u in failed_set]
+                write_results(output_file, records_by_url)
+                write_failed_urls(failed_urls_file, current_failed)
+                save_checkpoint(
+                    checkpoint_file,
+                    start=start,
+                    limit=limit,
+                    total_targets=len(target_urls),
+                    next_pos=next_pos,
+                    failed_urls=current_failed,
+                )
+                sleep_with_jitter(interval_seconds, jitter_ratio)
+
+            if retry_failed_at_end and failed_set and failed_retry_rounds > 0:
+                for round_id in range(1, failed_retry_rounds + 1):
+                    pending = [u for u in failed_urls if u in failed_set]
+                    if not pending:
+                        break
+                    print(f"Retry failed queue round {round_id}: {len(pending)} urls")
+                    for idx, url in enumerate(pending, start=1):
+                        label = f"[FAILED-R{round_id} {idx}/{len(pending)}]"
+                        record = fetch_record(url, label)
+                        if record is not None:
+                            records_by_url[url] = record
+                            failed_set.remove(url)
+                        current_failed = [u for u in failed_urls if u in failed_set]
+                        write_results(output_file, records_by_url)
+                        write_failed_urls(failed_urls_file, current_failed)
+                        save_checkpoint(
+                            checkpoint_file,
+                            start=start,
+                            limit=limit,
+                            total_targets=len(target_urls),
+                            next_pos=len(target_urls),
+                            failed_urls=current_failed,
+                        )
+                        sleep_with_jitter(interval_seconds, jitter_ratio)
+
+            final_failed = [u for u in failed_urls if u in failed_set]
+            write_results(output_file, records_by_url)
+            write_failed_urls(failed_urls_file, final_failed)
+            save_checkpoint(
+                checkpoint_file,
+                start=start,
+                limit=limit,
+                total_targets=len(target_urls),
+                next_pos=len(target_urls),
+                failed_urls=final_failed,
+            )
+            print(f"Saved {len(records_by_url)} records to: {output_file}")
+            if final_failed:
+                print(f"Remaining failed URLs: {len(final_failed)} (saved to {failed_urls_file})")
         finally:
             if browser is not None:
                 browser.close()
@@ -237,10 +411,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--interval-seconds", type=float, default=1.5)
+    parser.add_argument("--jitter-ratio", type=float, default=0.3, help="Random jitter ratio for sleep intervals.")
     parser.add_argument("--timeout-seconds", type=int, default=600)
     parser.add_argument("--max-retries", type=int, default=2)
     parser.add_argument("--retry-wait-seconds", type=float, default=2.0)
     parser.add_argument("--max-retry-wait-seconds", type=float, default=90.0)
+    parser.add_argument("--checkpoint-file", type=Path, default=DEFAULT_CHECKPOINT_FILE)
+    parser.add_argument("--resume", action="store_true", help="Resume from checkpoint and existing output file.")
+    parser.add_argument("--failed-urls-file", type=Path, default=DEFAULT_FAILED_URLS_FILE)
+    parser.add_argument(
+        "--retry-failed-at-end",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Retry failed URL queue at the end.",
+    )
+    parser.add_argument("--failed-retry-rounds", type=int, default=1)
     parser.add_argument("--user-data-dir", type=Path, default=Path("browser_profile_browser_only"))
     parser.add_argument("--output-file", type=Path, default=DEFAULT_OUTPUT_FILE)
     parser.add_argument("--browser-channel", choices=["chrome", "chromium"], default="chrome")
@@ -254,10 +439,16 @@ def main() -> None:
         limit=args.limit,
         start=args.start,
         interval_seconds=args.interval_seconds,
+        jitter_ratio=args.jitter_ratio,
         timeout_seconds=args.timeout_seconds,
         max_retries=args.max_retries,
         retry_wait_seconds=args.retry_wait_seconds,
         max_retry_wait_seconds=args.max_retry_wait_seconds,
+        checkpoint_file=args.checkpoint_file,
+        resume=args.resume,
+        failed_urls_file=args.failed_urls_file,
+        retry_failed_at_end=args.retry_failed_at_end,
+        failed_retry_rounds=args.failed_retry_rounds,
         user_data_dir=args.user_data_dir,
         output_file=args.output_file,
         browser_channel=args.browser_channel,
