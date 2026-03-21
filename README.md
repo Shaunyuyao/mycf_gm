@@ -18,7 +18,7 @@ taskkill /F /IM chrome.exe
 
 启动 CDP 实例（Windows）：
 ```bat
-start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-cdp-gsm"
+start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-cdp-gsm-9222"
 ```
 
 验证 9222 端口：
@@ -54,7 +54,7 @@ uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 
 
 ### 4) 全量抓取建议
 ```bash
-uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 --timeout-seconds 600 --interval-seconds 5 --jitter-ratio 0.3 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --resume --failed-retry-rounds 2
+uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 --timeout-seconds 600 --interval-seconds 20 --jitter-ratio 0.1 --max-retries 5 --retry-wait-seconds 4 --max-retry-wait-seconds 120 --resume --failed-retry-rounds 2
 
 ```
 
@@ -70,11 +70,3 @@ uv run python browser_only_scraper.py --cdp-url http://127.0.0.1:9222 --limit 0 
 
 - `DEP0169` Warning  
   为 Playwright 内部 Node 警告，可忽略，不影响抓取。
-
-### 其他备选方案（不作为主流程）
-- `scraper.py` 的 cookie 导入/诊断/直连抓取仍可用，但在当前站点风控下稳定性不如 browser-only。
-- 兜底可用第三方代抓：
-```bash
-set ZENROWS_API_KEY=你的key
-uv run python scraper.py scrape --provider zenrows --limit 20 --output-file data/gsmarena_specs_sample.json
-```

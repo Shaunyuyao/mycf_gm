@@ -1,182 +1,182 @@
 [
   {
-    "name": "ts_ok",
-    "value": "MTc3NDQ2MjIzM3xkYmJkZThjMmE3Zjk3NmFkMzc3NzllM2E2MjQ4NDBkMjA4Nzg5ODc4MzEwNDgyMTMyMzIxZGUxZDAxNmUzYzZifDkzNDAxZmRjYzcxZDEwMGY1YzMyODc1MjdkNTM0MGY4ZWE2MmUyNDA4ZTUzYjlkZDM0YjhlYzdjYTIyOWZiN2Y.42a62d9999d89a12d2fa9221ae3c1fa730eb7eededd09c0fcd217141da253e79",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1774462232.338127,
-    "httpOnly": true,
-    "secure": true,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "clever-counter-73756",
-    "value": "0-1",
-    "domain": "www.gsmarena.com",
-    "path": "/",
-    "expires": 1773861035,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
-  },
-  {
-    "name": "_ga",
-    "value": "GA1.1.1820389307.1773857436",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1808417577.341717,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "_lr_retry_request",
-    "value": "true",
-    "domain": "www.gsmarena.com",
-    "path": "/",
-    "expires": 1773861039,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
     "name": "_lr_env_src_ats",
     "value": "false",
     "domain": "www.gsmarena.com",
     "path": "/",
-    "expires": 1776449439,
+    "expires": 1776531321,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
     "name": "panoramaId_expiry",
-    "value": "1774462243131",
+    "value": "1774025723749",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1774462243,
+    "expires": 1774025723,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
     "name": "_cc_id",
-    "value": "6c8aa92cbfe407c9a86f4eff8039ef8d",
+    "value": "2cbbebde84e69797003c74c3a5df3477",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1797185441,
+    "expires": 1797267323,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
-    "name": "panoramaId",
-    "value": "2bd8c2c0fd991e3a3d4206d14739185ca02c8642372befc6218563c6a5173dbe",
+    "name": "_ga",
+    "value": "GA1.1.2088246853.1773939338",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1774462243,
+    "expires": 1808502643.4104,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
-  },
-  {
-    "name": "__gads",
-    "value": "ID=7fb82b94b4d2d762:T=1773857446:RT=1773857446:S=ALNI_MZHHN65BY4CCm94VjU4TSx-vBs5eA",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1807553446,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
-  },
-  {
-    "name": "__gpi",
-    "value": "UID=0000122395cb2dcc:T=1773857446:RT=1773857446:S=ALNI_Mafh1cu0G3qGNRumapvxbrOsoYMQw",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1807553446,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
-  },
-  {
-    "name": "__eoi",
-    "value": "ID=a83fa82efb8f0ee3:T=1773857446:RT=1773857446:S=AA-AfjaIUgTA_8kK8wkiZYIVVQKn",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1789409446,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
   },
   {
     "name": "keyw",
-    "value": "Acer",
+    "value": "Sagem",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1774721566.870546,
+    "expires": 1774806029.949531,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
-    "name": "_ga_WECNNBCHQE",
-    "value": "GS2.1.s1773857435$o1$g1$t1773857577$j60$l0$h0",
+    "name": "ts_ok",
+    "value": "MTc3NDU0NzQzNnxiMjNlZDQ4ZTIyYmExODk2N2M4YjMzMWExZjI0NjRlNGU2OWNmM2U0MWIwZmRiZWFmM2Y0YWVjMTAwODdkNmU5fDkzNDAxZmRjYzcxZDEwMGY1YzMyODc1MjdkNTM0MGY4ZWE2MmUyNDA4ZTUzYjlkZDM0YjhlYzdjYTIyOWZiN2Y.0d0966fb8ce7e41dd4ef5c9f01044605ce57b9673210af4a37e0b6e000ddc94e",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1808417577.341551,
-    "httpOnly": false,
-    "secure": false,
+    "expires": 1774547436.076625,
+    "httpOnly": true,
+    "secure": true,
     "sameSite": "Lax"
   },
   {
     "name": "DeviceID",
-    "value": "10932",
+    "value": "11920",
     "domain": "www.gsmarena.com",
     "path": "/",
-    "expires": 1774462377,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "cto_bundle",
-    "value": "EbZjtV8wc0NxcWM1WXAyMHhKVnZtOER1JTJGVlRERzU0UlNiYXVxNWg1MXZLNExJblE3ZFpPZHV4QVRCMWRCWThZWkRYclliMkZLc1NpaDVoM3NJeE5WU3IlMkI5N0RDSSUyQkQ3ak9CMmdNek85dnpURGhxWDdta3VRa3FKNHVzb2RseXllV1lGZWVGNVBBVEJYbzdSRjREc0RFZE5yZXclM0QlM0Q",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1807582380,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "cto_bidid",
-    "value": "JfQFX19VMCUyRmNJeHlaYkJzMUI5cHl5a2JWT1o1MmVpSlVqV3FsdUtmMTN0RzVwVWp2OExPaWZqWkNQWVpObHdvbEV3dmRXTUc5Q2Y0S29rTzk2OU1IUmFxa2c4cUFneTQ4NWlDTnpxNURVVlNSRyUyQkElM0Q",
-    "domain": ".gsmarena.com",
-    "path": "/",
-    "expires": 1807582380,
+    "expires": 1774547436,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
     "name": "FCCDCF",
-    "value": "%5Bnull%2Cnull%2Cnull%2Cnull%2Cnull%2Cnull%2C%5B%5B32%2C%22%5B%5C%22d729287c-fcf1-413f-9450-de149813b504%5C%22%2C%5B1773857437%2C339000000%5D%5D%22%5D%5D%5D",
+    "value": "%5Bnull%2Cnull%2Cnull%2Cnull%2Cnull%2Cnull%2C%5B%5B32%2C%22%5B%5C%227d5003cf-5bd4-48d8-a9b1-06ae16985b9f%5C%22%2C%5B1773939320%2C579000000%5D%5D%22%5D%5D%5D",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1807553608,
+    "expires": 1807638638,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
     "name": "FCNEC",
-    "value": "%5B%5B%22AKsRol-vmiVnGmo974UBxw6eqQDbwCWEtjHFsoZD2jrPr0GAnlw3L-Wws00U0-Tviaemh5ImVdB2Ae9CW7Y1iIWdmLCI7hqXXisrMgUG-GhtyicngvrxONxE3-4Ij4vsOafY92TreoqNCkdBUplEcr7fxLew6bTFtA%3D%3D%22%5D%5D",
+    "value": "%5B%5B%22AKsRol9GbF5faAcbNXk0OaF7fR_SSpoXdV8NjseuXi6YUWsthaY3DTJjTNC9Xfp0Bn_CY6LeR4KISLqAMwiKqa-SIfNzNQzHoigmW8FHt-nfu5mYN_viUq96h6GDZPc_y32WIf0KMr6X_s0ZfICjoeSgvZHmZ_NWsA%3D%3D%22%5D%5D",
     "domain": ".gsmarena.com",
     "path": "/",
-    "expires": 1805393611,
+    "expires": 1805478639,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
+  },
+  {
+    "name": "pbjs-unifiedid",
+    "value": "%7B%22TDID%22%3A%226d61e6a4-1e59-4332-91c6-7e116499cf12%22%2C%22TDID_LOOKUP%22%3A%22TRUE%22%2C%22TDID_CREATED_AT%22%3A%222026-02-19T17%3A50%3A43%22%7D",
+    "domain": "www.gsmarena.com",
+    "path": "/",
+    "expires": 1779126643,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "pbjs-unifiedid_cst",
+    "value": "YiwPLDosoA%3D%3D",
+    "domain": "www.gsmarena.com",
+    "path": "/",
+    "expires": 1779126643,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "pbjs-unifiedid_last",
+    "value": "Thu%2C%2019%20Mar%202026%2017%3A50%3A43%20GMT",
+    "domain": "www.gsmarena.com",
+    "path": "/",
+    "expires": 1779126643,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga_WECNNBCHQE",
+    "value": "GS2.1.s1773939338$o1$g1$t1773942643$j60$l0$h0",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1808502643.410111,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "cto_bundle",
+    "value": "7DwhEV9Ncld2T2I4blUlMkZqSDRCUmJ4SHEzVUNnTGFKdDlsRHRIeDVQelozbWp6anp6ZVEzSU9jZEdPSTQ5OUhNTkpFekF2NXhBTzA1U3lwbnkyYXUyV3B2T2RTTUhIYm9oN2RxeHliUFRZUG5uemR1aXV6RWlBZ1FXTVhLWndyeDYzR2szZVZFYW1kU3NSJTJGT0dBbEpHJTJGVEdLcHclM0QlM0Q",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1807667442,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "cto_bidid",
+    "value": "gqaXK19ueWgwYjdTRTRKYVVlSGEwU3drT2s2UE8wYk9ieXlOT0RvJTJCN3FCa1F0VW1odmI1TEtBaW5TaFBpWkhORW4xc1dkWUpmQWI1NVp5YkRvNzVLQ0l0bGRWdjcwdFpIcU5DYlpxbHVRN0VyR2tRJTNE",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1807667442,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "__gads",
+    "value": "ID=9988a9cabaa77cc5:T=1773939324:RT=1773943087:S=ALNI_MbhcTSIXquVC-sacI21rq4362J53g",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1807635324,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__gpi",
+    "value": "UID=00001224ce14023f:T=1773939324:RT=1773943087:S=ALNI_Maw6OKg832tGa1RS5XkvQHun75GTw",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1807635324,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__eoi",
+    "value": "ID=b240a49a67be5e26:T=1773939324:RT=1773943087:S=AA-AfjZ9tPDJgkfy2EVRNcSvejHO",
+    "domain": ".gsmarena.com",
+    "path": "/",
+    "expires": 1789491324,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
   }
 ]
